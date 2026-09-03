@@ -1,0 +1,171 @@
+// Hopenx LMS Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  STUDENT
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LessonStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BlockType {
+  TEXT
+  HEADING
+  IMAGE
+  VIDEO
+  PDF
+  FILE
+  LINK
+  DIVIDER
+  CALLOUT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  avatarUrl    String?
+  role         Role     @default(STUDENT)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdCourses         Course[]             @relation("CourseCreator")
+  createdLessons         Lesson[]             @relation("LessonCreator")
+  updatedLessons         Lesson[]             @relation("LessonUpdater")
+  assignedCollaborations LessonCollaborator[]
+  uploadedMedia          Media[]
+  uploadedResources      Resource[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Course {
+  id           String       @id @default(cuid())
+  title        String
+  slug         String       @unique
+  description  String       @db.Text
+  thumbnailUrl String?
+  bannerUrl    String?
+  status       CourseStatus @default(DRAFT)
+  createdById  String
+  createdBy    User         @relation("CourseCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  lessons      Lesson[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@index([createdById])
+}
+
+model Lesson {
+  id                String       @id @default(cuid())
+  courseId          String
+  course            Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title             String
+  slug              String       @unique
+  description       String       @db.Text
+  thumbnailUrl      String?
+  status            LessonStatus @default(DRAFT)
+  position          Int          @default(0)
+  estimatedDuration Int          @default(10) // minutes
+  createdById       String
+  createdBy         User         @relation("LessonCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  updatedById       String?
+  updatedBy         User?        @relation("LessonUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  blocks        LessonBlock[]
+  collaborators LessonCollaborator[]
+  media         Media[]
+  resources     Resource[]
+
+  @@index([slug])
+  @@index([courseId])
+  @@index([status])
+  @@index([position])
+}
+
+model LessonBlock {
+  id        String    @id @default(cuid())
+  lessonId  String
+  lesson    Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  type      BlockType
+  position  Int       @default(0)
+  content   String    @db.Text
+  metadata  String?   @db.Text // JSON string for block metadata
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([lessonId])
+  @@index([position])
+}
+
+model LessonCollaborator {
+  id        String   @id @default(cuid())
+  lessonId  String
+  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([lessonId, userId])
+  @@index([lessonId])
+  @@index([userId])
+}
+
+model Media {
+  id           String   @id @default(cuid())
+  lessonId     String?
+  lesson       Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  type         String // image, video, pdf, document
+  url          String
+  storageKey   String?
+  fileName     String
+  mimeType     String
+  size         Int
+  createdAt    DateTime @default(now())
+
+  @@index([lessonId])
+  @@index([uploadedById])
+}
+
+model Resource {
+  id           String   @id @default(cuid())
+  lessonId     String?
+  lesson       Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  title        String
+  url          String
+  storageKey   String?
+  fileName     String
+  mimeType     String
+  size         Int
+  createdAt    DateTime @default(now())
+
+  @@index([lessonId])
+  @@index([uploadedById])
+}
