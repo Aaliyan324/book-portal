@@ -39,6 +39,20 @@ export function Dialog({
 
   if (!open) return null
 
+  const isCompound = title === undefined && description === undefined && className === undefined
+
+  if (isCompound) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+        <div
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity animate-in fade-in"
+          onClick={() => onOpenChange(false)}
+        />
+        {children}
+      </div>
+    )
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
@@ -78,5 +92,62 @@ export function Dialog({
         <div>{children}</div>
       </div>
     </div>
+  )
+}
+
+export function DialogContent({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'relative z-50 w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl animate-in zoom-in-95 duration-150',
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+export function DialogHeader({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return <div className={cn('space-y-1 mb-4', className)}>{children}</div>
+}
+
+export function DialogTitle({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <h2 className={cn('text-xl font-bold text-slate-900 dark:text-white tracking-tight', className)}>
+      {children}
+    </h2>
+  )
+}
+
+export function DialogDescription({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <p className={cn('text-sm text-slate-500 dark:text-slate-400', className)}>
+      {children}
+    </p>
   )
 }

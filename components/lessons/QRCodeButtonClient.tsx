@@ -19,9 +19,9 @@ export function QRCodeButtonClient({ url, title }: QRCodeButtonClientProps) {
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        className="gap-2 shrink-0 border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+        className="gap-2 shrink-0 border-[#D4D4D4] text-[#171717] hover:bg-[#E5E5E5]/50 text-xs rounded-full"
       >
-        <QrCode className="h-4 w-4" /> Share QR Code
+        <QrCode className="h-4 w-4 text-[#EA580C]" /> Share QR Code
       </Button>
 
       <QRCodeDialog
@@ -33,3 +33,4 @@ export function QRCodeButtonClient({ url, title }: QRCodeButtonClientProps) {
     </>
   )
 }
+

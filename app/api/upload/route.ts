@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     }
 
     let fileUrl = ''
-    let storageKey = `hopenx/${category}/${Date.now()}-${file.name}`
+    let storageKey = `hopenix/${category}/${Date.now()}-${file.name}`
 
     // If Vercel Blob Token is set, upload to Vercel Blob
     if (process.env.BLOB_READ_WRITE_TOKEN) {
@@ -100,3 +100,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message || 'File upload failed' }, { status: 500 })
   }
 }
+

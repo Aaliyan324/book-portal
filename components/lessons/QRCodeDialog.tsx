@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import QRCode from 'qrcode'
-import { Dialog } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { QrCode, Copy, Download, Check, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
@@ -29,7 +29,7 @@ export function QRCodeDialog({
         width: 300,
         margin: 2,
         color: {
-          dark: '#1e3a8a', // Deep Hopenx blue QR modules
+          dark: '#171717', // Hopenix dark contrast module
           light: '#ffffff',
         },
       })
@@ -61,50 +61,57 @@ export function QRCodeDialog({
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Share & Scan QR Code"
-      description={`Dynamic QR code for "${title}"`}
-    >
-      <div className="flex flex-col items-center justify-center space-y-5 py-2">
-        {/* QR Code Container */}
-        <div className="relative p-4 rounded-2xl bg-white border border-slate-200 shadow-lg">
-          {qrDataUrl ? (
-            <img src={qrDataUrl} alt={`QR Code for ${title}`} className="h-56 w-56 object-contain" />
-          ) : (
-            <div className="flex h-56 w-56 items-center justify-center text-slate-400">
-              <QrCode className="h-12 w-12 animate-pulse" />
-            </div>
-          )}
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md p-6 bg-white border border-[#D4D4D4] rounded-[4px] space-y-4">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold text-[#171717] flex items-center gap-2">
+            <QrCode className="h-5 w-5 text-[#EA580C]" /> Share & Scan QR Code
+          </DialogTitle>
+          <DialogDescription className="text-xs text-[#525252]">
+            Dynamic QR code for <span className="font-semibold text-[#171717]">&quot;{title}&quot;</span>
+          </DialogDescription>
+        </DialogHeader>
 
-        {/* Public URL Box */}
-        <div className="w-full rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between text-xs font-mono text-slate-600 dark:text-slate-300">
-          <span className="truncate pr-2">{url}</span>
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 shrink-0"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-        </div>
+        <div className="flex flex-col items-center justify-center space-y-4 py-2">
+          {/* QR Code Container */}
+          <div className="p-3 rounded-[4px] bg-white border border-[#D4D4D4] shadow-sm">
+            {qrDataUrl ? (
+              <img src={qrDataUrl} alt={`QR Code for ${title}`} className="h-52 w-52 object-contain" />
+            ) : (
+              <div className="flex h-52 w-52 items-center justify-center text-[#525252]">
+                <QrCode className="h-10 w-10 animate-pulse" />
+              </div>
+            )}
+          </div>
 
-        {/* Actions */}
-        <div className="grid grid-cols-2 gap-3 w-full">
-          <Button variant="outline" onClick={handleCopy} className="w-full flex items-center gap-2">
-            {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-            {copied ? 'Copied!' : 'Copy URL'}
-          </Button>
+          {/* Public URL Box */}
+          <div className="w-full rounded-[2px] bg-[#E5E5E5]/30 p-2.5 border border-[#D4D4D4] flex items-center justify-between text-xs font-mono text-[#525252]">
+            <span className="truncate pr-2">{url}</span>
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#EA580C] hover:underline flex items-center gap-1 shrink-0 font-sans font-semibold"
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> Open
+            </a>
+          </div>
 
-          <Button variant="gradient" onClick={handleDownload} className="w-full flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Download PNG
-          </Button>
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-3 w-full pt-2">
+            <Button variant="outline" onClick={handleCopy} className="w-full text-xs rounded-full border-[#D4D4D4]">
+              {copied ? <Check className="h-4 w-4 text-emerald-600 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+              {copied ? 'Copied!' : 'Copy URL'}
+            </Button>
+
+            <Button onClick={handleDownload} className="w-full bg-[#171717] hover:bg-[#262626] text-white text-xs rounded-full">
+              <Download className="h-4 w-4 mr-1" />
+              Download PNG
+            </Button>
+          </div>
         </div>
-      </div>
+      </DialogContent>
     </Dialog>
   )
 }
+

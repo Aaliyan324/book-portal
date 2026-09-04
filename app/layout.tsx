@@ -1,13 +1,24 @@
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import { Toaster } from 'sonner'
 import './globals.css'
 
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
-  title: 'Hopenx - Learning Management Portal',
-  description: 'Enterprise Learning & Lesson Management System with role-based access control, block builder, and Vercel Blob media storage.',
+  title: {
+    default: 'Hopenix Learning Portal',
+    template: '%s | Hopenix Learning Portal',
+  },
+  description: 'Production-ready Learning Management System built with Next.js, Prisma ORM, Neon PostgreSQL, and Vercel Blob storage.',
   openGraph: {
-    title: 'Hopenx LMS',
-    description: 'Modern Lesson Management System built with Next.js App Router, Prisma ORM, and Neon PostgreSQL.',
+    title: 'Hopenix Learning Portal',
+    description: 'Empowering seamless learning, course creation, and collaborative editor workflows.',
+    siteName: 'Hopenix',
   },
 }
 
@@ -17,11 +28,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full">
-      <body className="h-full flex flex-col antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <html lang="en" className={`${inter.variable} h-full`}>
+      <body className={`${inter.className} h-full flex flex-col antialiased bg-white text-[#525252]`}>
         {children}
         <Toaster position="top-right" richColors />
       </body>
     </html>
   )
 }
+

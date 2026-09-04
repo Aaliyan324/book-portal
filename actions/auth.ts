@@ -2,9 +2,10 @@
 
 import { signInSchema, signUpSchema } from '@/lib/validation/schemas'
 import { prisma } from '@/lib/db/prisma'
-import { verifyPassword, hashPassword, setAuthCookie, removeAuthCookie } from '@/lib/auth/session'
+import { verifyPassword, hashPassword, setAuthCookie, removeAuthCookie, getDashboardPath, getCurrentUser } from '@/lib/auth/session'
 import { redirect } from 'next/navigation'
 import { Role } from '@prisma/client'
+import { revalidatePath } from 'next/cache'
 
 export async function signInAction(formData: FormData): Promise<void> {
   const email = formData.get('email') as string
@@ -16,7 +17,7 @@ export async function signInAction(formData: FormData): Promise<void> {
   }
 
   const user = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
+    where: { email: email.toLowerCase().trim() },
   })
 
   if (!user) {
@@ -35,11 +36,7 @@ export async function signInAction(formData: FormData): Promise<void> {
     name: user.name,
   })
 
-  let targetPath = '/courses'
-  if (user.role === Role.ADMIN) targetPath = '/admin/dashboard'
-  else if (user.role === Role.EDITOR) targetPath = '/editor/dashboard'
-
-  redirect(targetPath)
+  redirect(getDashboardPath(user.role))
 }
 
 export async function signUpAction(formData: FormData): Promise<void> {
@@ -52,8 +49,9 @@ export async function signUpAction(formData: FormData): Promise<void> {
     redirect(`/sign-up?error=${encodeURIComponent(validation.error.issues[0]?.message || 'Invalid input')}`)
   }
 
+  const normalizedEmail = email.toLowerCase().trim()
   const existing = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
+    where: { email: normalizedEmail },
   })
 
   if (existing) {
@@ -63,10 +61,10 @@ export async function signUpAction(formData: FormData): Promise<void> {
   const passwordHash = await hashPassword(password)
   const newUser = await prisma.user.create({
     data: {
-      name,
-      email: email.toLowerCase(),
+      name: name.trim(),
+      email: normalizedEmail,
       passwordHash,
-      role: Role.STUDENT,
+      role: Role.STUDENT, // Always default to STUDENT
     },
   })
 
@@ -77,7 +75,7 @@ export async function signUpAction(formData: FormData): Promise<void> {
     name: newUser.name,
   })
 
-  redirect('/courses')
+  redirect(getDashboardPath(newUser.role))
 }
 
 export async function signOutAction(): Promise<void> {
@@ -85,13 +83,56 @@ export async function signOutAction(): Promise<void> {
   redirect('/login')
 }
 
+export async function changePasswordAction(formData: FormData): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser()
+  if (!user) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  const currentPassword = formData.get('currentPassword') as string
+  const newPassword = formData.get('newPassword') as string
+  const confirmPassword = formData.get('confirmPassword') as string
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return { success: false, error: 'All fields are required' }
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { success: false, error: 'New passwords do not match' }
+  }
+
+  if (newPassword.length < 8) {
+    return { success: false, error: 'Password must be at least 8 characters' }
+  }
+
+  const dbUser = await prisma.user.findUnique({ where: { id: user.id } })
+  if (!dbUser) {
+    return { success: false, error: 'User not found' }
+  }
+
+  const isValid = await verifyPassword(currentPassword, dbUser.passwordHash)
+  if (!isValid) {
+    return { success: false, error: 'Incorrect current password' }
+  }
+
+  const newHash = await hashPassword(newPassword)
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash: newHash },
+  })
+
+  revalidatePath('/profile')
+  revalidatePath('/profile/security')
+  return { success: true }
+}
+
 export async function demoLoginAction(role: Role): Promise<void> {
-  let email = 'admin@hopenx.com'
-  if (role === Role.EDITOR) email = 'editor@hopenx.com'
-  if (role === Role.STUDENT) email = 'student@hopenx.com'
+  let email = process.env.ADMIN_EMAIL || 'admin@hopenix.com'
+  if (role === Role.EDITOR) email = 'editor@hopenix.com'
+  if (role === Role.STUDENT) email = 'student@hopenix.com'
 
   const user = await prisma.user.findUnique({
-    where: { email },
+    where: { email: email.toLowerCase() },
   })
 
   if (!user) {
@@ -105,9 +146,6 @@ export async function demoLoginAction(role: Role): Promise<void> {
     name: user.name,
   })
 
-  let targetPath = '/courses'
-  if (user.role === Role.ADMIN) targetPath = '/admin/dashboard'
-  else if (user.role === Role.EDITOR) targetPath = '/editor/dashboard'
-
-  redirect(targetPath)
+  redirect(getDashboardPath(user.role))
 }
+

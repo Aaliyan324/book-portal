@@ -5,10 +5,10 @@ import { prisma } from '@/lib/db/prisma'
 import { Role } from '@prisma/client'
 
 const JWT_SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'hopenx-super-secret-key-change-in-production-2026'
+  process.env.AUTH_SECRET || process.env.JWT_SECRET || 'hopenix-production-jwt-secret-key-32-chars-long'
 )
 
-export const AUTH_COOKIE_NAME = 'hopenx_auth_token'
+export const AUTH_COOKIE_NAME = 'hopenix_auth_token'
 
 export interface JWTPayload {
   userId: string
@@ -17,8 +17,14 @@ export interface JWTPayload {
   name: string
 }
 
+export function getDashboardPath(role?: Role | null): string {
+  if (role === Role.ADMIN) return '/admin/dashboard'
+  if (role === Role.EDITOR) return '/editor/dashboard'
+  return '/dashboard'
+}
+
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10)
+  return bcrypt.hash(password, 12)
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
@@ -84,3 +90,4 @@ export async function getCurrentUser() {
     return null
   }
 }
+
